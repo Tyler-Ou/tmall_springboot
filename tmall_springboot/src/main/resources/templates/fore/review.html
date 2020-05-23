@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="include/fore/header::html" ></head>
+<body>
+<!--当状态为waitReview评价按钮才监听-->
+<!--<a v-if="o.status=='waitReview'" :href="'review?oid='+o.id">-->
+<!--    <button  class="orderListItemReview">评价</button>-->
+<!--</a>-->
+<div id="workingArea">
+    <div th:replace="include/fore/top::html" ></div>
+    <div th:replace="include/fore/simpleSearch::html" ></div>
+    <div th:replace="include/fore/cart/reviewPage::html" ></div>
+    <div th:replace="include/fore/footer::html" ></div>
+</div>
+</body>
+</html>

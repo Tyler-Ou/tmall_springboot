@@ -1,0 +1,333 @@
+<div th:fragment="html">
+    <script>
+        $(function(){
+            var data4Vue = {
+                uri:'forecart',
+                orderItems:[]
+            };
+            //ViewModel
+            var vue = new Vue({
+                el: '#workingArea',
+                data: data4Vue,
+                mounted:function(){ //mounted　表示这个 Vue 对象加载成功了
+                    this.load();
+                },
+                methods: {
+                    load:function(){
+                        var url =  this.uri;
+                        axios.get(url).then(function(response) {
+                            //获得订单数据
+                            vue.orderItems = response.data;
+                            vue.$nextTick(function(){
+                                linkDefaultActions();
+                                //渲染结束了激活对应的js事件
+                                cartPageRegisterListeners();
+                            })
+                        });
+                    }
+                }
+            });
+
+        })
+
+        var deleteOrderItem = false;
+        var deleteOrderItemid = 0;
+        // 购物车页面和服务端的交互主要是三个
+        // 1. 增加、减少某种产品的数量
+        // 2. 删除某种产品
+        // 3. 选中产品后，提交到结算页面
+        function cartPageRegisterListeners(){
+            //删除对应的产品
+            $("a.deleteOrderItem").click(function(){
+                deleteOrderItem = false;
+                var oiid = $(this).attr("oiid")
+                deleteOrderItemid = oiid; //记录oiid
+                //弹出显示确认删除的模态窗口
+                $("#deleteConfirmModal").modal('show');
+            });
+            //模态窗口的确认删除,点击确认后，模态窗口消失，On事件自动触发
+            //如果选择关闭则在关闭按钮上直接选择data-dismiss="modal"直接关闭
+            $("button.deleteConfirmButton").click(function(){
+                deleteOrderItem = true; //确认删除该订单项，用于模态窗口消失时的逻辑判断
+                $("#deleteConfirmModal").modal('hide');
+            });
+
+            //为模态窗口绑定事件 hidden.bs.modal的意思就是当弹出的模态框消失的时候
+            $('#deleteConfirmModal').on('hidden.bs.modal', function (e) {
+                if(deleteOrderItem){ //当确认删除时,点击关闭时不作 处理
+                    //确认删除后静态请求删除订单
+                    var url = "foredeleteOrderItem?oiid="+deleteOrderItemid;
+                    axios.get(url).then(function(response){
+                        if(0==response.data.code){//当请求成功,并处于登录状态时
+                            //原则上来说是重新请求一次数据，但这里可以选择直接隐藏掉
+                            $("tr.cartProductItemTR[oiid="+deleteOrderItemid+"]").hide();
+                        }
+                        else{
+                            location.href="login";
+                        }
+                    });
+                }
+            })
+
+            $("img.cartProductItemIfSelected").click(function(){
+                var selectit = $(this).attr("selectit")
+                if("selectit"==selectit){
+                    $(this).attr("src","img/site/cartNotSelected.png");
+                    $(this).attr("selectit","false")
+                    $(this).parents("tr.cartProductItemTR").css("background-color","#fff");
+                }
+                else{
+                    $(this).attr("src","img/site/cartSelected.png");
+                    $(this).attr("selectit","selectit")
+                    $(this).parents("tr.cartProductItemTR").css("background-color","#FFF8E1");
+                }
+                syncSelect();
+                syncCreateOrderButton();
+                calcCartSumPriceAndNumber();
+            });
+            $("img.selectAllItem").click(function(){
+                var selectit = $(this).attr("selectit")
+                if("selectit"==selectit){
+                    $("img.selectAllItem").attr("src","img/site/cartNotSelected.png");
+                    $("img.selectAllItem").attr("selectit","false")
+                    $(".cartProductItemIfSelected").each(function(){
+                        $(this).attr("src","img/site/cartNotSelected.png");
+                        $(this).attr("selectit","false");
+                        $(this).parents("tr.cartProductItemTR").css("background-color","#fff");
+                    });
+                }
+                else{
+                    $("img.selectAllItem").attr("src","img/site/cartSelected.png");
+                    $("img.selectAllItem").attr("selectit","selectit")
+                    $(".cartProductItemIfSelected").each(function(){
+                        $(this).attr("src","img/site/cartSelected.png");
+                        $(this).attr("selectit","selectit");
+                        $(this).parents("tr.cartProductItemTR").css("background-color","#FFF8E1");
+                    });
+                }
+                syncCreateOrderButton();
+                calcCartSumPriceAndNumber();
+
+            });
+
+            $(".orderItemNumberSetting").keyup(function(){
+                var pid=$(this).attr("pid");
+                var stock= $("span.orderItemStock[pid="+pid+"]").text();
+                var price= $("span.orderItemPromotePrice[pid="+pid+"]").text();
+
+                var num= $(".orderItemNumberSetting[pid="+pid+"]").val();
+                num = parseInt(num);
+                if(isNaN(num))
+                    num= 1;
+                if(num<=0)
+                    num = 1;
+                if(num>stock)
+                    num = stock;
+
+                syncPrice(pid,num,price);
+            });
+
+            $(".numberPlus").click(function(){
+
+                var pid=$(this).attr("pid");
+                var stock= $("span.orderItemStock[pid="+pid+"]").text();
+                var price= $("span.orderItemPromotePrice[pid="+pid+"]").text();
+                var num= $(".orderItemNumberSetting[pid="+pid+"]").val();
+
+                num++;
+                if(num>stock)
+                    num = stock;
+                syncPrice(pid,num,price);
+            });
+            $(".numberMinus").click(function(){
+                var pid=$(this).attr("pid");
+                var stock= $("span.orderItemStock[pid="+pid+"]").text();
+                var price= $("span.orderItemPromotePrice[pid="+pid+"]").text();
+
+                var num= $(".orderItemNumberSetting[pid="+pid+"]").val();
+                --num;
+                if(num<=0)
+                    num=1;
+                syncPrice(pid,num,price);
+            });
+
+            $("button.createOrderButton").click(function(){
+                var params = "";
+                $(".cartProductItemIfSelected").each(function(){
+                    if("selectit"==$(this).attr("selectit")){
+                        var oiid = $(this).attr("oiid");
+                        params += "&oiid="+oiid;
+                    }
+                });
+                params = params.substring(1);
+                location.href="buy?"+params;
+            });
+        }
+
+        function syncCreateOrderButton(){
+            var selectAny = false;
+            $(".cartProductItemIfSelected").each(function(){
+                if("selectit"==$(this).attr("selectit")){
+                    selectAny = true;
+                }
+            });
+
+            if(selectAny){
+                $("button.createOrderButton").css("background-color","#C40000");
+                $("button.createOrderButton").removeAttr("disabled");
+            }
+            else{
+                $("button.createOrderButton").css("background-color","#AAAAAA");
+                $("button.createOrderButton").attr("disabled","disabled");
+            }
+
+        }
+        function syncSelect(){
+            var selectAll = true;
+            $(".cartProductItemIfSelected").each(function(){
+                if("false"==$(this).attr("selectit")){
+                    selectAll = false;
+                }
+            });
+
+            if(selectAll)
+                $("img.selectAllItem").attr("src","img/site/cartSelected.png");
+            else
+                $("img.selectAllItem").attr("src","img/site/cartNotSelected.png");
+
+        }
+        function calcCartSumPriceAndNumber(){
+            var sum = 0;
+            var totalNumber = 0;
+            $("img.cartProductItemIfSelected[selectit='selectit']").each(function(){
+                var oiid = $(this).attr("oiid");
+                //获取商品总单价价格
+                var price =$(".cartProductItemSmallSumPrice[oiid="+oiid+"]").text();
+                price = price.replace(/,/g, "");
+                price = price.replace(/￥/g, "");
+                sum += new Number(price);
+                //获取商品件数
+                var num =$(".orderItemNumberSetting[oiid="+oiid+"]").val();
+                //合计数量
+                totalNumber += new Number(num);
+
+            });
+            //总价
+            $("span.cartSumPrice").html("￥"+formatMoney(sum));
+            $("span.cartTitlePrice").html("￥"+formatMoney(sum));
+            $("span.cartSumNumber").html(totalNumber);
+        }
+        //每按一次+ - 就调用一次
+        function syncPrice(pid,num,price){
+            //修改前端页面信息
+            $(".orderItemNumberSetting[pid="+pid+"]").val(num);
+            var cartProductItemSmallSumPrice = formatMoney(num*price);
+            //合计当前pid对应的产品在订单项中的总价 = 数量*单价
+            $(".cartProductItemSmallSumPrice[pid="+pid+"]").html("￥"+cartProductItemSmallSumPrice);
+            //计算总价和总数量，前端先更新完信息再将更新的数据提交到数据库上
+            calcCartSumPriceAndNumber();
+            //在后端中更新修改的信息
+            var url = "forechangeOrderItem?pid="+pid+"&num="+num;
+            axios.get(url).then(function(response){
+                if(0!=response.data.code){
+                    location.href="login";
+                }
+            });
+        }
+
+    </script>
+
+    <title>购物车</title>
+    <div class="cartDiv">
+        <div class="cartTitle pull-right">
+            <span>已选商品  (不含运费)</span>
+            <span class="cartTitlePrice">￥0.00</span>
+            <button class="createOrderButton" disabled="disabled">结 算</button>
+        </div>
+
+        <div class="cartProductList">
+            <table class="cartProductTable">
+                <thead>
+                <tr>
+                    <th class="selectAndImage">
+                        <img selectit="false" class="selectAllItem" src="img/site/cartNotSelected.png">
+                        全选
+
+                    </th>
+                    <th>商品信息</th>
+                    <th>单价</th>
+                    <th>数量</th>
+                    <th width="120px">金额</th>
+                    <th class="operation">操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr :oiid="oi.id" class="cartProductItemTR" v-for="oi in orderItems">
+                    <!--第一列包含选择框和图片-->
+                    <td>
+                        <img selectit="false" :oiid="oi.id" class="cartProductItemIfSelected" src="img/site/cartNotSelected.png">
+                        <a style="display:none" href="#nowhere"><img src="img/site/cartSelected.png"></a>
+                        <img class="cartProductImg"  :src="'img/productSingle_middle/'+oi.product.firstProductImage.id+'.jpg'">
+                    </td>
+                    <!--第二列包含商品标题和三图标-->
+                    <td>
+                        <div class="cartProductLinkOutDiv">
+                            <a :href="'product?pid='+oi.product.id" class="cartProductLink">{{oi.product.name}}</a>
+                            <div class="cartProductLinkInnerDiv">
+                                <img src="img/site/creditcard.png" title="支持信用卡支付">
+                                <img src="img/site/7day.png" title="消费者保障服务,承诺7天退货">
+                                <img src="img/site/promise.png" title="消费者保障服务,承诺如实描述">
+                            </div>
+                        </div>
+                    </td>
+                    <!--第三列包含原价和促销价格-->
+                    <td>
+                        <span class="cartProductItemOringalPrice">￥{{oi.product.originalPrice|formatMoneyFilter}}</span>
+                        <span  class="cartProductItemPromotionPrice">￥{{oi.product.promotePrice|formatMoneyFilter}}</span>
+
+                    </td>
+                    <!--第四列包含产品数量和数量调整-->
+                    <td>
+                        <div class="cartProductChangeNumberDiv">
+                            <span class="hidden orderItemStock " :pid="oi.product.id">{{oi.product.stock}}</span>
+                            <span class="hidden orderItemPromotePrice " :pid="oi.product.id">{{oi.product.promotePrice}}</span>
+                            <a  :pid="oi.product.id" class="numberMinus" href="#nowhere">-</a> <!--减少-->
+                            <input :pid="oi.product.id" :oiid="oi.id" class="orderItemNumberSetting" autocomplete="off" :value="oi.number">
+                            <a  :stock="oi.product.stock" :pid="oi.product.id" class="numberPlus" href="#nowhere">+</a><!--增加-->
+                        </div>
+                    </td>
+
+                    <!--第五列包含总价-->
+                    <td >
+                        <span class="cartProductItemSmallSumPrice" :oiid="oi.id" :pid="oi.product.id" >
+                            ￥ {{oi.product.promotePrice*oi.number|formatMoneyFilter}}
+                        </span>
+                    </td>
+
+                    <!--第六列包含删除按钮-->
+                    <td>
+                        <a class="deleteOrderItem" :oiid="oi.id"  href="#nowhere">删除</a>
+                    </td>
+                </tr>
+                </tbody>
+
+            </table>
+        </div>
+
+        <div class="cartFoot">
+            <img selectit="false" class="selectAllItem" src="img/site/cartNotSelected.png">
+            <span>全选</span>
+            <!--         <a href="#">删除</a> -->
+
+            <div class="pull-right">
+                <span>已选商品 <span class="cartSumNumber" >0</span> 件</span>
+
+                <span>合计 (不含运费): </span>
+                <span class="cartSumPrice" >￥0.00</span>
+                <button class="createOrderButton" disabled="disabled" >结  算</button>
+            </div>
+
+        </div>
+
+    </div>
+</div>

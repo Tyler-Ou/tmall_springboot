@@ -1,0 +1,36 @@
+#配置Server基本属性
+server:
+  port: 1380
+  context-path: /tmall_springboot #配置上下文路径，当前路径为本地路径
+
+#配置JDBC属性
+spring:
+  datasource:
+    url: jdbc:mysql://192.168.1.40:3306/tmall_springboot?characterEncoding=UTF-8
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.jdbc.Driver
+    #自动指向当前Sql，需要注意的是不要重复操作，复杂会重复执行指定的sql语句
+#    schema:
+#      - classpath: tmall_springboot.sql
+  jpa:
+    hibernate:
+      # 更新或者创建数据表结构
+      ddl-auto: none
+      #jpa对实体类的默认字段会把驼峰命名的属性，转换为字段名的时候自动加上下划线。 这个配置的作用就是去掉下划线
+      #比如属性名称是 createDate, jpa 默认转换为字段名 create_Date。 有了这个配置之后，就会转换为同名字段 createDate
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    # 控制台显示SQL
+#    show-sql: true
+  #配置thymeleaf
+  thymeleaf:
+    mode: LEGACYHTML5  #LEGACYHTML5表示经典html5模式
+    encoding: UTF-8
+    content-type: text/html
+    cache: false
+  #设置上传文件大小，默认只有1 m
+  http:
+    multipart:
+      max-file-size: 100Mb
+      max-request-size: 100Mb

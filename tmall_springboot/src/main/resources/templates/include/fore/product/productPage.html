@@ -1,0 +1,67 @@
+<div th:fragment="html">
+    <script>
+        $(function(){
+            var pid = getUrlParms("pid");
+            var data4Vue = {
+                uri:'foreproduct',
+                p:'',
+                category:null,
+                firstProductImage:null,
+                pvs:[],
+                reviews:[],
+                showDetail:true,
+                showReview:false,
+                user:{name:'', password:''}
+            };
+            //ViewModel
+            var vue = new Vue({
+                el: '#workingArea',
+                data: data4Vue,
+                mounted:function(){ //mounted　表示这个 Vue 对象加载成功了
+                    linkDefaultActions();
+                    //请求产品基本信息
+                    this.load();
+                },
+                methods: {
+                    load:function(){
+                        // foreproduct/pid
+                        var url =  this.uri+"/"+pid;
+                        axios.get(url).then(function(response) {
+                            //response.data返回的为封装好的map
+                            var result = response.data;
+                            vue.p=result.data.product;
+                            vue.pvs=result.data.pvs;
+                            vue.reviews=result.data.reviews;
+
+                            vue.category = vue.p.category;
+                            vue.firstProductImage = vue.p.firstProductImage;
+                            vue.$nextTick(function(){
+                                imgAndInfoPageRegisterListeners(vue);
+                            })
+                        });
+
+                    },
+                    toggle2Detail:function(){
+                        this.showDetail=true;
+                        this.showReview=false;
+                    },
+                    toggle2Review:function(){
+                        this.showDetail=false;
+                        this.showReview=true;
+                    }
+                }
+            });
+
+        });
+    </script>
+
+    <title>天猫官网 -- {{p.name}}</title>
+    <div class="categoryPictureInProductPageDiv">
+        <img v-if="category!=null" class="categoryPictureInProductPage" :src="'img/category/'+category.id+'.jpg'">
+    </div>
+    <div class="productPageDiv">
+        <div th:replace="include/fore/product/imgAndInfo::html" ></div>
+        <div th:replace="include/fore/product/productReview::html" ></div>
+        <div th:replace="include/fore/product/productDetail::html" ></div>
+    </div>
+</div>

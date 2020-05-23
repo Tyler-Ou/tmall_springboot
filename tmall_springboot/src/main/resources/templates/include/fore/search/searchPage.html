@@ -1,0 +1,37 @@
+<div class th:fragment="html">
+    <script>
+        $(function(){
+            var keyword = getUrlParms("keyword");
+            var data4Vue = {
+                uri:'foresearch',
+                products:[]
+            };
+            //ViewModel
+            var vue = new Vue({
+                el: '#workingArea',
+                data: data4Vue,
+                mounted:function(){ //mounted　表示这个 Vue 对象加载成功了
+                    this.load();
+                },
+                methods: {
+                    load:function(){
+                        var url =  this.uri+"?keyword="+keyword;
+                        axios.post(url).then(function(response) {
+                            vue.products = response.data;
+                            vue.$nextTick(function(){
+                                linkDefaultActions();
+                            })
+                        });
+                    }
+                }
+            });
+        })
+    </script>
+
+    <div id="searchResult">
+        <div class="searchResultDiv">
+            <!--内容显示页，取出获得产品列表数据进行展示-->
+            <div th:replace="include/fore/search/productsBySearch::html" ></div>
+        </div>
+    </div>
+</div>

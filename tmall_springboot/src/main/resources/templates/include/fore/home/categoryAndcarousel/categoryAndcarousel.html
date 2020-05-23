@@ -1,0 +1,40 @@
+<div th:fragment="html">
+    <img src="img/site/catear.png" id="catear" class="catear"/>
+
+    <div class="categoryWithCarousel">
+
+        <div class="headbar show1">
+            <div class="head ">
+
+                <span style="margin-left:10px" class="glyphicon glyphicon-th-list"></span>
+                <span style="margin-left:10px" >商品分类</span>
+
+            </div>
+
+            <div class="rightMenu">
+                <span><a href=""><img src="img/site/chaoshi.png"/></a></span>
+                <span><a href=""><img src="img/site/guoji.png"/></a></span>
+                <!--categories数据在homepage中读入-->
+                <span v-for="c,index in categories" v-if='index<=3'>
+                        <a :href="'category?cid='+c.id">{{c.name}}</a>
+                    </span>
+            </div>
+
+        </div>
+        <!--竖状分类菜单-->
+        <div style="position: relative">
+            <div th:replace="include/fore/home/categoryAndcarousel/com/categoryMenu::html" ></div>
+        </div>
+        <!--竖状分类菜单右侧的推荐产品列表 默认关闭-->
+        <div style="position: relative;left: 0;top: 0;">
+            <div th:replace="include/fore/home/categoryAndcarousel/com/productsAsideCategorys::html" ></div>
+        </div>
+
+        <!--轮播-->
+        <div th:replace="include/fore/home/categoryAndcarousel/com/carousel::html" ></div>
+
+        <div class="carouselBackgroundDiv">
+        </div>
+
+    </div>
+</div>

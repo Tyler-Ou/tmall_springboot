@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:include="include/admin/adminHeader::html('分类管理')" ></head>
+<body>
+<div th:replace="include/admin/adminNavigator::html" ></div>
+
+<script>
+    $(function(){
+        var data4Vue = {
+            uri:'categories',
+            //分页参数
+            pagination:{},
+            beans: [],
+            //新增分类
+            bean:{
+                id:0,
+                name:''
+            },
+            file:null
+        };
+
+        //ViewModel
+        var vue = new Vue({
+            el: '#workingArea',
+            data: data4Vue,
+            mounted:function(){ //mounted　表示这个 Vue 对象加载成功了
+                //List方法写入参数0
+                this.list(0);
+            },
+            methods: {
+                list:function(start){
+                    //带上分页参数，此处为开始时参数 0即为基页
+                    var url =  this.uri+"?start="+start;
+                    var bean_name = this.bean.name;
+                    axios.get(url).then(function(response) {
+                        // 获取到的参数，以前是 json 化后的 category数组,现在是Page4Navigator对象
+                        //要重 Page4Navigator 对象的 .content 上获取出来。
+                        console.log(bean_name);
+                        console.log(response);
+                        vue.pagination = response.data;
+                        vue.beans = response.data.content;
+                    });
+                },
+                jump: function(page){
+                    jump(page,vue); //定义在adminHeader.html 中
+                },
+                jumpByNumber: function(start){
+                    jumpByNumber(start,vue);
+                },
+                add:function () {
+                   //检查分类名称是否为空 第一个参数为要检查的双向绑定的属性 第二个参数为报错时的信息
+                    if (!checkEmpty(this.bean.name,"分类名称")){
+                            return;
+                    }
+                    //检查上传的文件是否为空
+                    if (!checkEmpty(this.file,"分类图片")){
+                        return;
+                    }
+                    //当回车事件发生后上传文件,以及分类信息封装在FormData中并采用axios方式上传
+                    var formData = new FormData();
+                    formData.append("name",this.bean.name);
+                    formData.append("image",this.file);
+                   //console.log('file='+this.file);
+                    //建立post请求的categories的控制器
+                    axios.post(this.uri,formData).then(function (response) {
+                        //上传完数据刷新当前页
+                        //vue.list(0);
+                        //并清空上次上传的文件以及分类信息
+                        vue.list(0);
+                        vue.bean = { id: 0, name: '', hp: '0'};
+                        $("#categoryPic").val('');
+                        vue.file = null;
+
+                    })
+                },
+                getFile:function (event) {
+                    //当按钮失去焦点时即将上传的文件临时保存在file上
+                    //console.log(event)
+                    //获取事件对象并获取临时上传的图片文件
+                    this.file  = event.target.files[0];
+                    // console.log(event);
+                    // console.log('file='+this.file.lastModified);
+                },
+                //根据Restful 是用delete请求的方法 delete~ /categories/id
+                deleteBean:function (bean_Id) {
+                    //提示确认删除
+                    if(!checkDeleteLink())
+                        return;
+                    var url = this.uri+'/'+bean_Id;
+                    //使用axios发送delete请求
+                    axios.delete(url).then(function (response) {
+                            if (0!=response.data.length){
+                                alert(response.data);
+                            }else{
+                                //如果没有查询到数据即清空
+                                vue.list(0);
+                            }
+                    });
+                }
+
+            }
+        });
+    });
+
+</script>
+
+<div id="workingArea" >
+    <h1 class="label label-info" >分类管理</h1>
+    <br>
+    <br>
+    <div class="listDataTableDiv">
+        <table class="table table-striped table-bordered table-hover  table-condensed">
+            <thead>
+            <tr class="success">
+                <th>ID</th>
+                <th>图片</th>
+                <th>分类名称</th>
+                <th>属性管理</th>
+                <th>产品管理</th>
+                <th>编辑</th>
+                <th>删除</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="bean in beans ">
+                <td>{{bean.id}}</td>
+                <td>
+                    <img height="40px"  :src="'img/category/'+bean.id+'.jpg'">
+                </td>
+                <td>
+                    {{bean.name}}
+                </td>
+                <td>
+                    <a :href="'admin_property_list?cid=' + bean.id "><span class="glyphicon glyphicon-th-list"></span></a>
+                </td>
+                <td>
+                    <a :href="'admin_product_list?cid=' + bean.id "><span class="glyphicon glyphicon-shopping-cart"></span></a>
+                </td>
+                <td>
+                    <a :href="'admin_category_edit?id=' + bean.id "><span class="glyphicon glyphicon-edit"></span></a>
+                </td>
+                <td>
+                    <a href="#nowhere"  @click="deleteBean(bean.id)"><span class=" glyphicon glyphicon-trash"></span></a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div th:replace="include/admin/adminPage::html" ></div>
+    <!--新增分类-->
+    <div class="panel panel-warning addDiv">
+        <div class="panel-heading">新增分类</div>
+        <div class="panel-body">
+          <table class="addTable">
+              <tr>
+                  <td>分类名称</td>
+                  <!--将视图上的数据放到Vue对象上去 采用vue的双向绑定v-model，同时也可以将数据绑定到视图上-->
+                  <td><input  @keyup.enter="add" v-model.trim="bean.name" class="form-control" type="text"></td>
+              </tr>
+
+              <tr>
+                  <td>分类图片</td>
+                  <td>
+                      <!--@change当输入框失焦的时候触发而且在elementUI中使用change时是这样的@visible-change-->
+                     <!--为声明接受文件的类型如accept="image/gif,image/png"  其中$event为事件对象-->
+                      <input id="categoryPic" type="file" accept="image/*" name="image" @change="getFile($event)"  >
+                  </td>
+              </tr>
+
+               <tr>
+                    <td colspan="2" align="center">
+                        <a href="#nowhere"  @click="add" class="btn btn-success">提交</a>
+                    </td>
+               </tr>
+
+
+
+          </table>
+
+
+        </div>
+
+
+    </div>
+
+
+
+
+
+
+</div>
+<div th:replace="include/admin/adminFooter::html" ></div>
+</body>
+</html>

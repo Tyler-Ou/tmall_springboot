@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:include="include/fore/header::html" ></head>
+
+<script>
+    //注册成功后5秒后返回首页
+    $(function () {
+        var code = getUrlParms("code");
+        window.setTimeout(function () {
+            if (code==0){
+                location.href = "home";
+            }
+        },3000);
+        //提示用户倒计时返回首页
+    })
+
+
+</script>
+
+
+<body>
+<div id="workingArea">
+    <div th:replace="include/fore/top::html" ></div>
+    <div th:replace="include/fore/simpleSearch::html" ></div>
+    <div th:replace="include/fore/registerSuccessPage::html" ></div>
+    <div th:replace="include/fore/footer::html" ></div>
+</div>
+</body>
+</html>

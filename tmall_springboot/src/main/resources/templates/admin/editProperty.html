@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:include="include/admin/adminHeader::html('编辑属性')" ></head>
+<body>
+<div th:replace="include/admin/adminNavigator::html" ></div>
+
+<script>
+    $(function () {
+
+        var data4Vue = {
+            uri: 'properties',
+            listURL:'admin_property_list',
+            bean:{
+                id:0,
+                name:""},
+            category:''
+        }
+        var vue = new Vue({
+            el:"#workingArea",
+            data:data4Vue,
+            mounted:function () {
+                 this.get();
+            },
+            methods:{
+                //获取property对象的同时获取category对象
+                get:function () {
+                //@GetMapping("/properties/{id}")
+                    var id = getUrlParms("id");
+                    var url = this.uri +"/"+id;
+                    //返回一个Property的bean
+                    axios.get(url).then(function (response) {
+                        vue.bean = response.data;
+                        vue.category = vue.bean.category;
+                    });
+                },
+                //更新数据
+                update:function () {
+                    //在数据库中更新Category对应的property信息
+                    // @PutMapping("/properties") 传入当前的bean
+                    var url = this.uri;
+                    var now_bean = this.bean;
+                    axios.put(url,now_bean).then(function (response) {
+                        //跳转回去列表页
+                        location.href=vue.listURL+"?cid="+vue.category.id;
+                    })
+                }
+            }
+
+        })
+
+    })
+
+
+
+</script>
+
+
+
+<div id="workingArea">
+
+    <ol class="breadcrumb">
+        <li><a href="admin_category_list">所有分类</a></li>
+        <li><a :href="'admin_property_list?cid='+category.id">{{category.name}}</a></li>
+        <li class="active">属性管理</li>
+    </ol>
+
+    <div class="panel panel-warning editDiv">
+        <div class="panel-heading">编辑属性</div>
+        <div class="panel-body">
+            <table class="editTable">
+                <tr>
+                    <td>属性名称</td>
+                    <td><input  @keyup.enter="update"  v-model.trim="bean.name" type="text" class="form-control"></td>
+                </tr>
+                <tr class="submitTR">
+                    <td colspan="2" align="center">
+                        <input type="hidden" name="id"   v-model.trim="bean.id" >
+                        <a href="#nowhere" class="btn btn-success" @click="update">提 交</a>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div th:replace="include/admin/adminFooter::html" ></div>
+</body>
+</html>

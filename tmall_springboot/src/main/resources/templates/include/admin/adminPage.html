@@ -1,0 +1,25 @@
+<div class="pageDiv" th:fragment="html">
+	<nav>
+	  <ul class="pagination">
+	    <li :class="{ disabled: pagination.first }">
+	      <a  href="#nowhere" @click="jump('first')">首页</a>
+	    </li>
+	    <li :class="{ disabled: !pagination.hasPrevious }">
+	      <a  href="#nowhere" @click="jump('pre')">上一页</a>
+	    </li>		    
+
+		<li  v-for="i in pagination.navigatepageNums">
+			<a href="#nowhere" @click="jumpByNumber(i-1)" >
+				{{i}}
+			</a>
+		</li>
+
+	    <li :class="{ disabled: !pagination.hasNext }">
+	      <a  href="#nowhere" @click="jump('next')">下一页</a>
+	    </li>
+	    <li :class="{ disabled: pagination.last }">
+	      <a  href="#nowhere" @click="jump('last')">最后一页</a>
+	    </li>		    
+	  </ul>
+	</nav>    
+</div>
