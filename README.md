@@ -13,20 +13,17 @@ VC**、**SpringBoot**框架，而前端框架则选择了主流的**BootStrap**�
 ├─tmall                 
 │  ├─comparator         比较器类 用于搜索结果筛选     
 │  ├─config             配置器类 用于配置 跨域、 redis、Shiro、页面拦截
-
 │  ├─entity             实体类	
 │  │ ├─controller      控制器
 │  │ ├─dao              持久层进行DAO操作
 │  │ ├─pojo 	       实体
 │  │ ├─service	       服务
-
 │  ├─es                 Elasticsearch持久层API配置类
 │  ├─exception         全局异常处理器类
 │  ├─interceptor       拦截器类 
 │  ├─realm              shiro-Realm类
 │  ├─test               测试类			
 │  ├─util               工具类   
-
 │  ├─web                页面类	
 │  │ ├─AdminPageController      后台页面控制器
 │  │ ├─ForePageController       前端页面映射控制器
