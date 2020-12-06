@@ -5,7 +5,7 @@
 SPRINGBOOT天猫整站，基于 **前后端分离思想**， 由于该商城高并发的特点，后端框架便使用了方便维护的 **SpringM
 VC**、**SpringBoot**框架，而前端框架则选择了主流的**BootStrap**、**Vue.js**，**JQuery**三大前端框架，页面使用**Thymeleaf3**渲染。为了方便**校验登录**和**访问控制**、**授权**在安全框架方面使⽤了**Shiro** ，因为该项目的数据使用**JPA**  进行**DAO**操作, 所以在搜索引擎方面使⽤和SpringBoot兼容性高的**ElasticSearch**搜索引擎。**ElasticSearch**在SpringBoot上有专门JPA 接口 **ElasticsearchRepository** 进行DAO操作。最后因为电商网站的数据在处理过程中，通常在高并发的场景下涉及到了大量的重复读写，这样一来会消耗了很多性能和读取时间，为了可以满足高并发场景下实时的读取需求，所以缓存⽅⾯⽤了Redis。
 
-
+## 预览图 请看：https://blog.csdn.net/weixin_38800668/article/details/106311538
 ## 二、项目结构
 ### 1. 项目名称
 **项目名称：** tmall_springboot
