@@ -1,5 +1,5 @@
-# tmall_springboot
-基于前后端分离+SpringBoot+BootStrap、Vue.js、JQuery+JPA+Redis的天猫整站
+# 天猫整站 基于前后端分离+SpringBoot+BootStrap、Vue.js、JQuery+JPA+Redis
+天猫整站 基于前后端分离+SpringBoot+BootStrap、Vue.js、JQuery+JPA+Redis
 
 ## 一、项目介绍和演示
 SPRINGBOOT天猫整站，基于 **前后端分离思想**， 由于该商城高并发的特点，后端框架便使用了方便维护的 **SpringM
