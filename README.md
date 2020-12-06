@@ -1,4 +1,4 @@
-# 天猫整站 基于前后端分离+SpringBoot+BootStrap、Vue.js、JQuery+JPA+Redis
+# SpringBoot天猫商城整站 基于前后端分离+SpringBoot+BootStrap、Vue.js、JQuery+JPA+Redis
 天猫整站 基于前后端分离+SpringBoot+BootStrap、Vue.js、JQuery+JPA+Redis
 
 ## 一、项目介绍和演示
